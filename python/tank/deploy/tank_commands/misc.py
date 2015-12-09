@@ -220,7 +220,7 @@ class ScriptAction(InterpreterAction):
 
         log.info("Running script '%s'." % args[0])
         if not os.path.exists(args[0]):
-            raise TankError("The script '%s' can't be found!")
+            raise TankError("The script '%s' can't be found!" % args[0])
 
         locals["log"] = log
 
