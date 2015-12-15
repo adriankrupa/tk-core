@@ -135,26 +135,6 @@ class Application(TankBundle):
         Called by the engine as it is being destroyed.
         """
         pass
-    
-    
-    ##########################################################################################
-    # logging methods, delegated to the current engine
-
-    def log_debug(self, msg):
-        self.engine.log_debug(msg)
-
-    def log_info(self, msg):
-        self.engine.log_info(msg)
-
-    def log_warning(self, msg):
-        self.engine.log_warning(msg)
-
-    def log_error(self, msg):
-        self.engine.log_error(msg)
-
-    def log_exception(self, msg):
-        self.engine.log_exception(msg)
-
 
 def get_application(engine, app_folder, descriptor, settings, instance_name, env):
     """

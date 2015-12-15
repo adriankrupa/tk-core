@@ -20,7 +20,7 @@ at any point.
 
 import logging
 
-logger = logging.getLogger("shotgun_auth.invoker")
+logger = logging.getLogger("sg_auth.invoker")
 
 
 def create():

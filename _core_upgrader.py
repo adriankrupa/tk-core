@@ -456,7 +456,7 @@ if __name__ == "__main__":
     
     if len(sys.argv) == 3 and sys.argv[1] == "migrate":
         path = sys.argv[2]
-        migrate_log = logging.getLogger("tank.update")
+        migrate_log = logging.getLogger("sgtk.update")
         migrate_log.setLevel(logging.DEBUG)
         ch = logging.StreamHandler()
         formatter = logging.Formatter("%(levelname)s %(message)s")

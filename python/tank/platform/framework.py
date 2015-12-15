@@ -125,27 +125,6 @@ class Framework(TankBundle):
         Implemented by deriving classes in order to tear down the framework
         """
         pass
-    
-    
-    ##########################################################################################
-    # logging methods, delegated to the current engine
-
-    def log_debug(self, msg):
-        self.engine.log_debug(msg)
-
-    def log_info(self, msg):
-        self.engine.log_info(msg)
-
-    def log_warning(self, msg):
-        self.engine.log_warning(msg)
-
-    def log_error(self, msg):
-        self.engine.log_error(msg)
-
-    def log_exception(self, msg):
-        self.engine.log_exception(msg)
-
-
 
 ###################################################################################################
 #

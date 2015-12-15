@@ -18,6 +18,9 @@ import re
 import sys
 import imp
 import uuid
+import traceback
+
+from .. import logs
 from .. import hook
 from ..errors import TankError
 from . import constants
@@ -40,6 +43,8 @@ class TankBundle(object):
         self.__descriptor = descriptor    
         self.__frameworks = {}
         self.__environment = env
+
+        self._logger = logs.get_logger(self.name)
 
         # emit an engine started event
         tk.execute_core_hook(constants.TANK_BUNDLE_INIT_HOOK_NAME, bundle=self)
@@ -440,8 +445,67 @@ class TankBundle(object):
             self.__tk.execute_core_hook("ensure_folder_exists", path=path, bundle_obj=self)
         except Exception, e:
             raise TankError("Error creating folder %s: %s" % (path, e))
-        
 
+
+    ##########################################################################################
+    # logging interfaces
+
+    def log_debug(self, msg):
+        """
+        Debug logging.
+        Implemented in deriving class.
+        """
+        self._logger.debug(msg)
+
+    def log_info(self, msg):
+        """
+        Info logging.
+        Implemented in deriving class.
+        """
+        self._logger.info(msg)
+
+    def log_warning(self, msg):
+        """
+        Warning logging.
+        Implemented in deriving class.
+        """
+        self._logger.warning(msg)
+
+    def log_error(self, msg):
+        """
+        Debug logging.
+        Implemented in deriving class - however we provide a basic implementation here.
+        """
+        self._logger.error(msg)
+
+    def log_exception(self, msg):
+        """
+        Helper method. Typically not overridden by deriving classes.
+        This method is called inside an except clause and it creates an formatted error message
+        which is logged as an error.
+        """
+        (exc_type, exc_value, exc_traceback) = sys.exc_info()
+
+        if exc_traceback is None:
+            # we are not inside an exception handler right now.
+            # someone is calling log_exception from the running code.
+            # in this case, present the current stack frame
+            # and a sensible message
+            stack_frame = traceback.extract_stack()
+            traceback_str = "".join(traceback.format_list(stack_frame))
+            exc_value = "No error details available."
+        else:
+            traceback_str = "".join(traceback.format_tb(exc_traceback))
+        message = []
+        message.append(msg)
+        message.append("")
+        message.append("%s" % exc_value)
+        message.append("The current environment is %s." % self.__environment.name)
+        message.append("")
+        message.append("Code Traceback:")
+        message.extend(traceback_str.split("\n"))
+
+        self._logger.error("\n".join(message))
 
     ##########################################################################################
     # internal helpers

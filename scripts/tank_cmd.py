@@ -14,6 +14,7 @@ import os
 import cgi
 import re
 import logging
+from sgtk.logs import get_logger, install_file_handler
 import string
 import tank
 import textwrap
@@ -1414,7 +1415,7 @@ def _extract_credentials(cmd_line):
 if __name__ == "__main__":
 
     # set up logging channel for this script
-    logger = logging.getLogger("tank.setup_project")
+    logger = get_logger("tand_cmd")
     logger.setLevel(logging.INFO)
 
     ch = logging.StreamHandler(sys.stdout)
