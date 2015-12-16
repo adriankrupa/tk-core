@@ -453,28 +453,24 @@ class TankBundle(object):
     def log_debug(self, msg):
         """
         Debug logging.
-        Implemented in deriving class.
         """
         self._logger.debug(msg)
 
     def log_info(self, msg):
         """
         Info logging.
-        Implemented in deriving class.
         """
         self._logger.info(msg)
 
     def log_warning(self, msg):
         """
         Warning logging.
-        Implemented in deriving class.
         """
         self._logger.warning(msg)
 
     def log_error(self, msg):
         """
         Debug logging.
-        Implemented in deriving class - however we provide a basic implementation here.
         """
         self._logger.error(msg)
 
