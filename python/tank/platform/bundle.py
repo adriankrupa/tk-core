@@ -19,6 +19,7 @@ import sys
 import imp
 import uuid
 import traceback
+import logging
 
 from .. import logs
 from .. import hook
@@ -45,6 +46,7 @@ class TankBundle(object):
         self.__environment = env
 
         self._logger = logs.get_logger(self.name)
+        self._logger.setLevel(logging.NOTSET)
 
         # emit an engine started event
         tk.execute_core_hook(constants.TANK_BUNDLE_INIT_HOOK_NAME, bundle=self)
@@ -103,6 +105,10 @@ class TankBundle(object):
 
     ##########################################################################################
     # properties
+
+    @property
+    def logger(self):
+        return self._logger
 
     @property
     def name(self):

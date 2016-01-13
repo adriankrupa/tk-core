@@ -14,7 +14,7 @@ import os
 import cgi
 import re
 import logging
-from sgtk.logs import get_logger
+from sgtk import logs
 import string
 import tank
 import textwrap
@@ -1415,15 +1415,13 @@ def _extract_credentials(cmd_line):
 if __name__ == "__main__":
 
     # set up logging channel for this script
-    logger = get_logger("tank_cmd")
+    logger = logs.get_logger("tank_cmd")
 
-    root_logger = get_logger()
-
+    # Set up output handler for this process.
     ch = logging.StreamHandler(sys.stdout)
     formatter = AltCustomFormatter()
     ch.setFormatter(formatter)
-    ch.setLevel(logging.INFO)
-    root_logger.addHandler(ch)
+    logs.set_output_handler(ch)
 
     # the first argument is always the path to the code root
     # we are running from.
@@ -1441,10 +1439,13 @@ if __name__ == "__main__":
     debug_mode = False
     if "--debug" in cmd_line:
         debug_mode = True
-        root_logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
         logger.debug("")
         logger.debug("Running with debug output enabled.")
         logger.debug("")
+    else:
+        logger.setLevel(logging.INFO)
+
     cmd_line = [arg for arg in cmd_line if arg != "--debug"]
 
     # help requested?

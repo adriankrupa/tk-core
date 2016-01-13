@@ -23,6 +23,7 @@ import logging
 
 from .. import loader
 from .. import hook
+from .. import logs
 from ..errors import TankError, TankEngineInitError
 from ..deploy.dev_descriptor import TankDevDescriptor
 
@@ -81,6 +82,15 @@ class Engine(TankBundle):
 
         # init base class
         TankBundle.__init__(self, tk, context, settings, descriptor, env)
+
+        output_handler = logs.get_output_handler()
+        if output_handler:
+            # Enable debug logging on the root toolit level if debug_logging is set.
+            if self.get_setting("debug_logging", False):
+                print "setting debug"
+                output_handler.setLevel(logging.DEBUG)
+            else:
+                output_handler.setLevel(logging.INFO)
 
         # check that the context contains all the info that the app needs
         validation.validate_context(descriptor, context)
