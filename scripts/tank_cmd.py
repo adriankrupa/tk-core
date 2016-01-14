@@ -386,7 +386,7 @@ def shotgun_cache_actions(log, pipeline_config_root, args):
     """
 
     # we are talking to shotgun! First of all, make sure we switch on our html style logging
-    log.handlers[0].formatter.enable_html_mode()
+    logs.get_output_handler().formatter.enable_html_mode()
 
     log.debug("Running shotgun_cache_actions command")
     log.debug("Arguments passed: %s" % args)
@@ -407,14 +407,14 @@ def shotgun_cache_actions(log, pipeline_config_root, args):
     entity_type = args[0]
     cache_file_name = args[1]
 
-    num_log_messages_before = log.handlers[0].formatter.get_num_items()
+    num_log_messages_before = logs.get_output_handler().formatter.get_num_items()
     try:
         _write_shotgun_cache(tk, entity_type, cache_file_name)
     except TankError, e:
         log.error("Error writing shotgun cache file: %s" % e)
     except Exception, e:
         log.exception("A general error occurred.")
-    num_log_messages_after = log.handlers[0].formatter.get_num_items()
+    num_log_messages_after = logs.get_output_handler().formatter.get_num_items()
 
     # check if there were any log output. This is an indication that something
     # weird and unexpected has happened...
@@ -463,7 +463,7 @@ def shotgun_run_action_auth(log, install_root, pipeline_config_root, is_localize
     :param args: list of arguments passed from Shotgun.
     """
     # we are talking to shotgun! First of all, make sure we switch on our html style logging
-    log.handlers[0].formatter.enable_html_mode()
+    logs.get_output_handler().formatter.enable_html_mode()
 
     log.debug("Running shotgun_run_action_auth command")
 
@@ -555,7 +555,7 @@ def shotgun_run_action(log, install_root, pipeline_config_root, is_localized, ar
     :param args: list of arguments passed from Shotgun.
     """
     # we are talking to shotgun. First of all, make sure we switch on our html style logging
-    log.handlers[0].formatter.enable_html_mode()
+    logs.get_output_handler().formatter.enable_html_mode()
 
     log.debug("Running shotgun_run_action command")
     log.debug("Arguments passed: %s" % args)
