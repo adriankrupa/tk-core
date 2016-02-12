@@ -50,6 +50,17 @@ class AppDescriptor(object):
         self._location_dict = location_dict
         self.__manifest_data = None
 
+    def __eq__(self, other):
+        # By default, we can assume equality if the path to the data
+        # on disk is equivalent.
+        if isinstance(other, self.__class__):
+            return self.get_path() == other.get_path()
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not (self == other)
+
     def __repr__(self):
         class_name = self.__class__.__name__
         return "<%s %s %s>" % (class_name, self.get_system_name(), self.get_version())
@@ -429,42 +440,60 @@ class AppDescriptor(object):
 
 class VersionedSingletonDescriptor(AppDescriptor):
     """
-    Singleton base class for the versioned app descriptor classes.
+    Caching layer for the versioned app descriptor classes.
 
-    Each descriptor object is a singleton based on its install root path,
-    name, and version number.
+    Executes prior to __init__, caches descriptor instances so that
+    an instance for a given locator is only ever created once.
+
+    The cache keys based on the bundle storage root path and
+    the locator dictionary.
     """
     _instances = dict()
 
-    def __new__(cls, pc_path, bundle_install_path, location_dict, *args, **kwargs):
-        # We will cache based on the bundle install path, name of the
-        # app/engine/framework, and version number.
+    def __new__(cls, pc_path, bundle_cache_root, location_dict, *args, **kwargs):
+        """
+        Handles caching of descriptors.
+
+        Executed prior to __init__ being executed.
+
+        Since all our normal descriptors are immutable - they represent a specific,
+        read only and cached version of an app, engine or framework on disk, we can
+        also cache their wrapper objects.
+
+        :param pc_path: Path to pipeline configuration
+        :param bundle_cache_root: Root location for bundle cache
+        :param location_dict: Location dictionary describing the bundle
+        :return: Descriptor instance
+        """
         instance_cache = cls._instances
-        name = location_dict.get("name")
-        version = location_dict.get("version")
+
+        # The cache is keyed based on the location dict and the bundle install root
+        cache_key = (bundle_cache_root, str(location_dict))
 
         # Instantiate and cache if we need to, otherwise just return what we
         # already have stored away.
-        if (bundle_install_path not in instance_cache or
-            name not in instance_cache[bundle_install_path] or
-            version not in instance_cache[bundle_install_path][name]):
+        if cache_key not in instance_cache:
             # If the bundle install path isn't in the cache, then we are
             # starting fresh. Otherwise, check to see if the app (by name)
             # is cached, and if not initialize its specific cache. After
             # that we instantiate and store by version.
-            if bundle_install_path not in instance_cache:
-                instance_cache[bundle_install_path] = dict()
-            if name not in instance_cache[bundle_install_path]:
-                instance_cache[bundle_install_path][name] = dict()
-            instance_cache[bundle_install_path][name][version] = super(VersionedSingletonDescriptor, cls).__new__(
+            instance_cache[cache_key] = super(VersionedSingletonDescriptor, cls).__new__(
                 cls,
                 pc_path,
-                bundle_install_path,
+                bundle_cache_root,
                 location_dict,
                 *args, **kwargs
             )
 
-        return instance_cache[bundle_install_path][name][version]
+        return instance_cache[cache_key]
+
+    def __eq__(self, other):
+        # Since this is a singleton descriptor, we can check
+        # to see if it's a reference to the same object.
+        return self is other
+
+    def __ne__(self, other):
+        return self is not other
 
 
 ################################################################################################

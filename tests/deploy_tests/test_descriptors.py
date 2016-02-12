@@ -12,13 +12,14 @@ import os
 
 from tank_test.tank_test_base import *
 from sgtk.deploy import descriptor
+from tank.errors import TankError
 
 
 class TestDescriptors(TankTestBase):
 
-    def _test_name_based_descriptor_location(self, bundle_type, bundle_location, descriptor_type):
+    def _test_app_store_descriptor_location(self, bundle_type, bundle_location):
         """
-        Tests an appstore descriptor bundle path for the given bundle type and location.
+        Tests an app store descriptor bundle path for the given bundle type and location.
 
         :param bundle_type: One of descriptor.AppDescriptor.{APP,ENGINE,FRAMEWORK}
         :param bundle_location: Location in the pipeline configuration where bundles of the given
@@ -28,17 +29,61 @@ class TestDescriptors(TankTestBase):
         desc = descriptor.get_from_location(
             bundle_type,
             self.tk.pipeline_configuration,
-            {"type": descriptor_type, "version": "v0.1.2", "name": "tk-bundle"}
+            {"type": "app_store", "version": "v0.1.2", "name": "tk-bundle"}
         )
         self.assertEqual(
             desc.get_path(),
             os.path.join(
                 bundle_location,
-                descriptor_type,
+                "app_store",
                 "tk-bundle",
                 "v0.1.2"
             )
         )
+
+        # test caching
+        desc2 = descriptor.get_from_location(
+            bundle_type,
+            self.tk.pipeline_configuration,
+            {"type": "app_store", "version": "v0.1.2", "name": "tk-bundle"}
+        )
+        # note that we don't use the equality operator here but using 'is' to
+        # make sure we are getting the same instance back
+        self.assertTrue(desc is desc2)
+
+        desc3 = descriptor.get_from_location(
+            bundle_type,
+            self.tk.pipeline_configuration,
+            {"type": "app_store", "version": "v0.1.3", "name": "tk-bundle"}
+        )
+        # note that we don't use the equality operator here but using 'is' to
+        # make sure we are getting the same instance back
+        self.assertTrue(desc is not desc3)
+
+    def _test_manual_descriptor_location(self, bundle_type, bundle_location):
+        """
+        Tests a manual descriptor bundle path for the given bundle type and location.
+
+        :param bundle_type: One of descriptor.AppDescriptor.{APP,ENGINE,FRAMEWORK}
+        :param bundle_location: Location in the pipeline configuration where bundles of the given
+            type get installed.
+        """
+
+        desc = descriptor.get_from_location(
+            bundle_type,
+            self.tk.pipeline_configuration,
+            {"type": "manual", "version": "v0.1.2", "name": "tk-bundle"}
+        )
+        self.assertEqual(
+            desc.get_path(),
+            os.path.join(
+                bundle_location,
+                "manual",
+                "tk-bundle",
+                "v0.1.2"
+            )
+        )
+
 
     def _test_dev_descriptor_location(self, bundle_type, bundle_location):
         """
@@ -92,6 +137,25 @@ class TestDescriptors(TankTestBase):
             )
         )
 
+        # test caching
+        desc2 = descriptor.get_from_location(
+            bundle_type,
+            self.tk.pipeline_configuration,
+            {"type": "git", "path": repo, "version": "v0.1.2"}
+        )
+        # note that we don't use the equality operator here but using 'is' to
+        # make sure we are getting the same instance back
+        self.assertTrue(desc is desc2)
+
+        desc3 = descriptor.get_from_location(
+            bundle_type,
+            self.tk.pipeline_configuration,
+            {"type": "git", "path": repo, "version": "v0.1.3"}
+        )
+        # note that we don't use the equality operator here but using 'is' to
+        # make sure we are getting the same instance back
+        self.assertTrue(desc is not desc3)
+
     def _test_git_descriptor_location(self, bundle_type, bundle_location):
         """
         Tests a git descriptor bundle path for the given bundle type and location for all
@@ -126,15 +190,13 @@ class TestDescriptors(TankTestBase):
             descriptor.AppDescriptor.FRAMEWORK: os.path.join(self.tk.pipeline_configuration.get_install_location(), "install", "frameworks")
         }
         for bundle_type, bundle_location in bundle_types.iteritems():
-            self._test_name_based_descriptor_location(
+            self._test_app_store_descriptor_location(
                 bundle_type,
-                bundle_location,
-                "app_store"
+                bundle_location
             )
-            self._test_name_based_descriptor_location(
+            self._test_manual_descriptor_location(
                 bundle_type,
-                bundle_location,
-                "manual"
+                bundle_location
             )
             self._test_dev_descriptor_location(
                 bundle_type,
@@ -144,3 +206,34 @@ class TestDescriptors(TankTestBase):
                 bundle_type,
                 bundle_location
             )
+
+    def test_git_version_logic(self):
+        """
+        Test git descriptor version logic
+        """
+        desc = descriptor.get_from_location(
+            descriptor.AppDescriptor.APP,
+            self.tk.pipeline_configuration,
+            {"type": "git", "path": "git@github.com:dummy/tk-multi-dummy.git", "version": "v1.2.3"})
+
+        # absolute match
+        self.assertEqual(desc._find_latest_tag_by_pattern(["v1.2.3"], "v1.2.3"), "v1.2.3")
+        self.assertEqual(desc._find_latest_tag_by_pattern(["v1.2.3", "v1.2.2"], "v1.2.3"), "v1.2.3")
+
+        # simple matches
+        self.assertEqual(desc._find_latest_tag_by_pattern(["v1.2.3", "v1.2.2"], "v1.2.x"), "v1.2.3")
+        self.assertEqual(desc._find_latest_tag_by_pattern(["v1.2.3", "v1.2.2"], "v1.2.x"), "v1.2.3")
+        self.assertEqual(desc._find_latest_tag_by_pattern(["v1.2.3", "v1.2.233", "v1.3.1"], "v1.3.x"), "v1.3.1")
+        self.assertEqual(desc._find_latest_tag_by_pattern(["v1.2.3", "v1.2.233", "v1.3.1", "v2.3.1"], "v1.x.x"), "v1.3.1")
+
+        # forks
+        self.assertEqual(desc._find_latest_tag_by_pattern(["v1.2.3", "v1.2.233", "v1.3.1.2.3"], "v1.3.x"), "v1.3.1.2.3")
+        self.assertEqual(desc._find_latest_tag_by_pattern(["v1.2.3", "v1.2.233", "v1.3.1.2.3", "v1.4.233"], "v1.3.1.x"), "v1.3.1.2.3")
+
+        # invalids
+        self.assertRaisesRegexp(TankError,
+                                "Incorrect version pattern '.*'. There should be no digit after a 'x'",
+                                desc._find_latest_tag_by_pattern,
+                                ["v1.2.3", "v1.2.233", "v1.3.1"],
+                                "v1.x.2")
+
