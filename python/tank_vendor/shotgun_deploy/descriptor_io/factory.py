@@ -140,17 +140,18 @@ def _uri_to_dict(location_uri):
             # there is a name defined
             location_dict["name"] = urllib.unquote(chunks[2])
 
+        # Index from the end to get to the paths since the third token is optional
         if chunks[1] == "dev":
             # local path descriptor
-            location_dict["path"] = urllib.unquote(chunks[3])
+            location_dict["path"] = urllib.unquote(chunks[-1])
         else:
             # three os format
-            if chunks[3] != "":
-                location_dict["windows_path"] = urllib.unquote(chunks[3])
-            if chunks[4] != "":
-                location_dict["linux_path"] = urllib.unquote(chunks[4])
-            if chunks[5] != "":
-                location_dict["mac_path"] = urllib.unquote(chunks[5])
+            if chunks[-3] != "":
+                location_dict["windows_path"] = urllib.unquote(chunks[-3])
+            if chunks[-2] != "":
+                location_dict["linux_path"] = urllib.unquote(chunks[-2])
+            if chunks[-1] != "":
+                location_dict["mac_path"] = urllib.unquote(chunks[-1])
 
     elif descriptor_type == "path" or descriptor_type == "path3":
         # sgtk:path:[name]:local_path
