@@ -149,3 +149,6 @@ class IODescriptorDev(IODescriptorPath):
         """
         return True
 
+    def get_latest_cached_version(self):
+        return self
+

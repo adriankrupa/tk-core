@@ -73,6 +73,10 @@ def create_io_descriptor(sg, descriptor_type, location, bundle_cache_root, fallb
         log.debug("Latest keyword detected. Searching for latest version...")
         descriptor = descriptor.get_latest_version()
         log.debug("Resolved latest to be %r" % descriptor)
+    elif location_dict.get("version") == constants.LATEST_CACHED_DESCRIPTOR_KEYWORD:
+        log.debug("Latest_cached keyword detected. Searching for latest cached version...")
+        descriptor = descriptor.get_latest_cached_version()
+        log.debug("Resolved latest cached to be %r" % descriptor)
 
     return descriptor
 

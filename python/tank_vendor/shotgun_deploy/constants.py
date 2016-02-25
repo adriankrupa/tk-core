@@ -97,6 +97,9 @@ UNMANAGED_PIPELINE_CONFIG_NAME = "Unmanaged"
 # descriptor keyword denoting the latest version number
 LATEST_DESCRIPTOR_KEYWORD = "latest"
 
+# descriptor keyword denoting the latest cached version number
+LATEST_CACHED_DESCRIPTOR_KEYWORD = "latest_cached"
+
 # default namespace
 DEFAULT_NAMESPACE = "default"
 

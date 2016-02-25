@@ -9,11 +9,14 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import os
+import glob
 import uuid
 import tempfile
 import urllib
 import urllib2
 import cPickle as pickle
+from distutils.version import LooseVersion
+
 
 from ..zipfilehelper import unzip_file
 from ..descriptor import Descriptor
@@ -399,6 +402,34 @@ class IODescriptorAppStore(IODescriptorBase):
 
     #############################################################################
     # searching for other versions
+
+    def get_latest_cached_version(self):
+
+        # FIXME: This should be refactored into a base class named VersionedIODescriptorBase
+        # so that other descriptors can reuse this.
+        print self._bundle_cache_root
+        latest_version = None
+        for root in [self._bundle_cache_root] + self._fallback_roots:
+            for bundle_path in glob.iglob(os.path.join(root, "app_store", self.get_system_name(), "v*.*.*")):
+                version = os.path.basename(bundle_path)
+                if latest_version is None or LooseVersion(version) > latest_version:
+                    latest_version = version
+
+        if latest_version is None:
+            return None
+
+        # make a location dict
+        location_dict = {
+            "type": "app_store",
+            "name": self._name,
+            "version": latest_version
+        }
+
+        # and return a descriptor instance
+        desc = IODescriptorAppStore(location_dict, self._sg_connection, self._type)
+        desc.set_cache_roots(self._bundle_cache_root, self._fallback_roots)
+
+        return desc
 
     def get_latest_version(self, constraint_pattern=None):
         """

@@ -47,6 +47,9 @@ def create_descriptor(sg_connection, descriptor_type, location, bundle_cache_roo
         fallback_roots
     )
 
+    if io_descriptor is None:
+        return None
+
     # now create a high level descriptor and bind that with the low level descriptor
     if descriptor_type == Descriptor.APP:
         return AppDescriptor(io_descriptor)
